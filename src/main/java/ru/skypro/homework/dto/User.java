@@ -8,7 +8,7 @@ public class User {
     private String mail;
     private String firstName;
     private String lastName;
-    private Role phone;
-    private String role;
+    private String phone;
+    private Role role;
     private String image;
 }

@@ -1,32 +1,39 @@
 package ru.skypro.homework.service.impl;
 
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.Register;
+import ru.skypro.homework.models.UserEntity;
+import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
+
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private final UserDetailsManager manager;
     private final PasswordEncoder encoder;
+    private final UserRepository userRepository;
 
     public AuthServiceImpl(UserDetailsManager manager,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           UserRepository userRepository) {
         this.manager = manager;
         this.encoder = passwordEncoder;
+        this.userRepository = userRepository;
     }
 
     @Override
     public boolean login(String userName, String password) {
-        if (!manager.userExists(userName)) {
+        UserEntity userEntity = userRepository.findByEmail(userName);
+
+        if (userEntity == null) {
             return false;
         }
-        UserDetails userDetails = manager.loadUserByUsername(userName);
-        return encoder.matches(password, userDetails.getPassword());
+
+        return encoder.matches(password, userEntity.getPassword());
     }
 
     @Override
@@ -41,6 +48,17 @@ public class AuthServiceImpl implements AuthService {
                         .username(register.getUsername())
                         .roles(register.getRole().name())
                         .build());
+
+        UserEntity userEntity = new UserEntity();
+        userEntity.setEmail(register.getUsername());
+        userEntity.setFirstName(register.getFirstName());
+        userEntity.setLastName(register.getLastName());
+        userEntity.setPhone(register.getPhone());
+        userEntity.setRole(register.getRole());
+        userEntity.setPassword(encoder.encode(register.getPassword()));
+
+        userRepository.save(userEntity);
+
         return true;
     }
 

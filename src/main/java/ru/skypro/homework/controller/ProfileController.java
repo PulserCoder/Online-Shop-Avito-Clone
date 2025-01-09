@@ -9,6 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.NewPassword;
 import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
+import ru.skypro.homework.service.ProfileService;
+
+import java.io.IOException;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -16,48 +19,32 @@ import ru.skypro.homework.dto.User;
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
 public class ProfileController {
+    private final ProfileService profileService;
+
     @PostMapping(path = "/set_password")
     public ResponseEntity<HttpStatus> setPassword(@RequestBody NewPassword newPassword) {
-        if (newPassword != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+        if (profileService.changePassword(newPassword)) {
+            return ResponseEntity.status(HttpStatus.OK).build();
         }
-        else if (newPassword == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     @GetMapping(path = "/me")
-    public ResponseEntity<HttpStatus> getDetailsAboutMe() {
-        User me = new User();
-
-        if (me != null) {
-            return ResponseEntity.status(HttpStatus.OK).build();
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<User> getDetailsAboutMe() {
+        return ResponseEntity.ok(profileService.getCurrentUser());
     }
 
     @PatchMapping(path = "/me")
     public ResponseEntity<UpdateUser> updateDetails(@RequestBody UpdateUser updateUser) {
-        if (updateUser != null) {
-            return ResponseEntity.ok(updateUser);
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        profileService.updateUser(updateUser);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PatchMapping(path = "/me/image", consumes = "multipart/form-data")
-    public ResponseEntity<HttpStatus> updateImage(@RequestBody MultipartFile file) {
-        if (file != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<HttpStatus> updateImage(@RequestBody MultipartFile file) throws IOException {
+            profileService.changeImage(file);
+
+            return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
