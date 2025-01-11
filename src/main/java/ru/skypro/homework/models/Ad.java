@@ -20,7 +20,7 @@ public class Ad {
     private int price;
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
-    private User author;
+    private UserEntity author;
 
     @OneToMany(mappedBy = "ad")
     private List<CommentEntity> comments;
