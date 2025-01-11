@@ -27,7 +27,7 @@ public class CommentsController {
         comment.setCreatedAt(System.currentTimeMillis());
         comment.setAuthorImage("path");
 
-        List list = List.of(comment);
+        List<Comment> list = List.of(comment);
 
         Comments comments = new Comments();
 
