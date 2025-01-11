@@ -9,7 +9,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-public class Comment {
+public class CommentEntity {
     @Id
     @GeneratedValue
     private int pk;
@@ -22,7 +22,7 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "author")
-    private User author;
+    private UserEntity author;
 
     @ManyToOne
     @JoinColumn(name = "ad")
