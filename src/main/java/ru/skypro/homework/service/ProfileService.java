@@ -1,9 +1,9 @@
 package ru.skypro.homework.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.NewPassword;
-import ru.skypro.homework.dto.UpdateUser;
-import ru.skypro.homework.dto.User;
+import ru.skypro.homework.dto.profile.NewPassword;
+import ru.skypro.homework.dto.profile.UpdateUser;
+import ru.skypro.homework.dto.profile.User;
 
 import java.io.IOException;
 
