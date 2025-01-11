@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.skypro.homework.dto.Comment;
-import ru.skypro.homework.dto.Comments;
-import ru.skypro.homework.dto.CreateOrUpdateComment;
+import ru.skypro.homework.dto.comment.Comment;
+import ru.skypro.homework.dto.comment.Comments;
+import ru.skypro.homework.dto.comment.CreateOrUpdateComment;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class CommentsController {
         comment.setCreatedAt(System.currentTimeMillis());
         comment.setAuthorImage("path");
 
-        List list = List.of(comment);
+        List<Comment> list = List.of(comment);
 
         Comments comments = new Comments();
 
