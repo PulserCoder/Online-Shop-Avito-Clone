@@ -1,10 +1,10 @@
-package ru.skypro.homework.dto;
+package ru.skypro.homework.dto.ad;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
-
 @Data
-public class ImageUpload {
+public class AdCreate {
     private MultipartFile image;
+    private Ad properties;
 }
