@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.NewPassword;
-import ru.skypro.homework.dto.UpdateUser;
-import ru.skypro.homework.dto.User;
+import ru.skypro.homework.dto.profile.NewPassword;
+import ru.skypro.homework.dto.profile.UpdateUser;
+import ru.skypro.homework.dto.profile.User;
 import ru.skypro.homework.service.ProfileService;
 
 import java.io.IOException;

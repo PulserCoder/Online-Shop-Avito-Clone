@@ -8,9 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.NewPassword;
-import ru.skypro.homework.dto.UpdateUser;
-import ru.skypro.homework.dto.User;
+import ru.skypro.homework.dto.profile.NewPassword;
+import ru.skypro.homework.dto.profile.UpdateUser;
+import ru.skypro.homework.dto.profile.User;
+import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ProfileService;
@@ -25,14 +26,17 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final UserDetailsManager manager;
     private final PasswordEncoder encoder;
+    private final UserMapper userMapper;
     private static final String UPLOAD_DIR = "uploads/";
 
     public ProfileServiceImpl(UserRepository userRepository,
                               UserDetailsManager manager,
-                              PasswordEncoder encoder) {
+                              PasswordEncoder encoder,
+                              UserMapper userMapper) {
         this.userRepository = userRepository;
         this.manager = manager;
         this.encoder = encoder;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -44,16 +48,7 @@ public class ProfileServiceImpl implements ProfileService {
             return null;
         }
 
-        User userDto = new User();
-        userDto.setId(userEntity.getId());
-        userDto.setMail(userEntity.getEmail());
-        userDto.setFirstName(userEntity.getFirstName());
-        userDto.setLastName(userEntity.getLastName());
-        userDto.setPhone(userEntity.getPhone());
-        userDto.setRole(userEntity.getRole());
-        userDto.setImage(userEntity.getImage());
-
-        return userDto;
+        return userMapper.userEntityToUser(userEntity);
     }
 
     @Override
