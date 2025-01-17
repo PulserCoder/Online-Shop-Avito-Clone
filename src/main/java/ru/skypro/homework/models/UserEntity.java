@@ -5,6 +5,7 @@ import lombok.Setter;
 import ru.skypro.homework.dto.Role;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Table(name = "users")
 @Entity
@@ -23,6 +24,9 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AdEntity> ads;
 
     private String image;
 }
