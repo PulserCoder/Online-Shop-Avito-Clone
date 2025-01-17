@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import ru.skypro.homework.dto.Role;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -31,6 +32,9 @@ public class UserEntity implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AdEntity> ads;
 
     private String image;
 

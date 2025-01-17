@@ -3,9 +3,9 @@ package ru.skypro.homework.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.skypro.homework.dto.ad.AdDetailed;
-import ru.skypro.homework.models.Ad;
+import ru.skypro.homework.models.AdEntity;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface AdMapper {
 
     @Mapping(source = "id", target = "pk")
@@ -13,5 +13,6 @@ public interface AdMapper {
     @Mapping(source = "author.lastName", target = "authorLastName")
     @Mapping(source = "author.email", target = "email")
     @Mapping(source = "author.phone", target = "phone")
-    AdDetailed toAdDetailed(Ad ad);
+    AdDetailed toAdDetailed(AdEntity ad);
+
 }

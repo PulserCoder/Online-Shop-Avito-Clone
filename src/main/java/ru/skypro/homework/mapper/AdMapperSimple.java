@@ -3,10 +3,15 @@ package ru.skypro.homework.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.skypro.homework.dto.ad.Ad;
+import ru.skypro.homework.models.AdEntity;
 
-@Mapper
+import java.util.List;
+
+@Mapper(componentModel = "spring")
 public interface AdMapperSimple {
     @Mapping(source = "author.id", target = "author")
     @Mapping(source = "id", target = "pk")
-    Ad toAdDTO(ru.skypro.homework.models.Ad ad);
+    Ad toAdDTO(AdEntity ad);
+
+    List<Ad> toAdListDTO(List<AdEntity> ads);
 }
