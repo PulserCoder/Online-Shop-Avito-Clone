@@ -53,9 +53,14 @@ public class AuthServiceImpl implements AuthService {
                         .roles(register.getRole().name())
                         .build());
 
-        userRepository.save(registerMapper.registerToUserEntity(register));
+        UserEntity userEntity = registerMapper.registerToUserEntity(register);
+
+        userEntity.setPassword(encoder.encode(register.getPassword()));
+
+        userRepository.save(userEntity);
 
         return true;
     }
+
 
 }

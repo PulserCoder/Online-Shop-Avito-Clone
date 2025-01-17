@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -117,5 +118,10 @@ public class ProfileServiceImpl implements ProfileService {
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         userEntity.setImage(fileName);
+    }
+
+    @Override
+    public Optional<UserEntity> getUserById(long id) {
+        return userRepository.findById(id);
     }
 }
