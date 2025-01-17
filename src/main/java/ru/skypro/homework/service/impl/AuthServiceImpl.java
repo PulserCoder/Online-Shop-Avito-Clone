@@ -48,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
 
+
         UserEntity user = registerMapper.registerToUserEntity(register);
 
         user.setPassword(encoder.encode(register.getPassword()));
@@ -56,5 +57,6 @@ public class AuthServiceImpl implements AuthService {
 
         return true;
     }
+
 
 }

@@ -113,4 +113,9 @@ public class ProfileServiceImpl implements ProfileService {
 
         user.setImage(fileName);
     }
+
+    @Override
+    public Optional<UserEntity> getUserById(long id) {
+        return userRepository.findById(id);
+    }
 }
