@@ -7,7 +7,7 @@ import ru.skypro.homework.dto.comment.Comment;
 import ru.skypro.homework.dto.comment.Comments;
 import ru.skypro.homework.dto.comment.CreateOrUpdateComment;
 import ru.skypro.homework.mapper.utils.CommentMappersUtils;
-import ru.skypro.homework.models.Ad;
+import ru.skypro.homework.models.AdEntity;
 import ru.skypro.homework.models.CommentEntity;
 import ru.skypro.homework.models.UserEntity;
 
@@ -43,7 +43,7 @@ public interface CommentMapper {
             @Mapping(target = "count", expression = "java((long) ad.getComments().size())"),
             @Mapping(target = "comments", expression = "java(ad.getComments().stream().map(this::toComment).collect(Collectors.toList()))")
     })
-    Comments toCommentsDto(Ad ad);
+    Comments toCommentsDto(AdEntity ad);
 
 
 

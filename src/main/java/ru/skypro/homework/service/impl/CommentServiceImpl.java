@@ -8,7 +8,7 @@ import ru.skypro.homework.dto.comment.Comment;
 import ru.skypro.homework.dto.comment.Comments;
 import ru.skypro.homework.dto.comment.CreateOrUpdateComment;
 import ru.skypro.homework.mapper.CommentMapper;
-import ru.skypro.homework.models.Ad;
+import ru.skypro.homework.models.AdEntity;
 import ru.skypro.homework.models.CommentEntity;
 import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.AdRepository;
@@ -28,7 +28,7 @@ public class CommentServiceImpl implements CommentService {
     public Comment addComment(CreateOrUpdateComment comment, int commentId, int adId) {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity userEntity = userRepository.findByEmail(username);
+        UserEntity userEntity = userRepository.findByEmail(username).orElseThrow(IllegalArgumentException::new);
 
 
         CommentEntity commentEntity = commentMapper.toEntity(comment, commentId, userEntity, adId);
@@ -40,7 +40,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public Comments getComments(int adId) {
 
-        Ad ad = adRepository.findById(adId).orElse(null);
+        AdEntity ad = adRepository.findById(adId).orElse(null);
         if (ad == null) {
             return null;
         }
@@ -56,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public boolean isCommentOwner(int commentId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity userEntity = userRepository.findByEmail(username);
+        UserEntity userEntity = userRepository.findByEmail(username).orElseThrow(IllegalArgumentException::new);
         return commentRepository.findById(commentId)
                 .map(comment -> comment.getAuthor().getId() == userEntity.getId())
                 .orElse(false);

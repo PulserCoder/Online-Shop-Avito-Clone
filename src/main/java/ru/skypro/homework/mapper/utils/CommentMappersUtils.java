@@ -3,7 +3,7 @@ package ru.skypro.homework.mapper.utils;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
-import ru.skypro.homework.models.Ad;
+import ru.skypro.homework.models.AdEntity;
 import ru.skypro.homework.service.AdService;
 
 @Named("CommentMapperUtils")
@@ -15,7 +15,7 @@ public class CommentMappersUtils {
 
 
     @Named("getAdById")
-    public Ad getAdById(int adId) {
+    public AdEntity getAdById(int adId) {
         return adService.findById(adId).orElseThrow(() -> new IllegalArgumentException("Ad not found with id: "
                 + adId));
     }
