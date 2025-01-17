@@ -3,10 +3,12 @@ package ru.skypro.homework.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.comment.Comment;
 import ru.skypro.homework.dto.comment.Comments;
 import ru.skypro.homework.dto.comment.CreateOrUpdateComment;
+import ru.skypro.homework.service.CommentService;
 
 import java.util.List;
 
@@ -17,53 +19,38 @@ import java.util.List;
 @RequestMapping("/ads")
 public class CommentsController {
 
+    private final CommentService commentService;
+
     @GetMapping("{id}/comments")
     public ResponseEntity<Comments> getComments(@PathVariable int id) {
-        Comment comment = new Comment();
 
-        comment.setPk(1);
-        comment.setAuthor(1);
-        comment.setText("This is a comment");
-        comment.setCreatedAt(System.currentTimeMillis());
-        comment.setAuthorImage("path");
-
-        List<Comment> list = List.of(comment);
-
-        Comments comments = new Comments();
-
-        comments.setComments(list);
-        comments.setCount(1);
-
-        return ResponseEntity.ok(comments);
+        Comments comments = commentService.getComments(id);
+        return comments != null ? ResponseEntity.ok(comments) : ResponseEntity.notFound().build()   ;
     }
 
 
     @PostMapping("{id}/comments")
     public ResponseEntity<Comment> addComment(@PathVariable int id, @RequestBody CreateOrUpdateComment comment) {
-        Comment comment1 = new Comment();
-        comment1.setPk(id);
-        comment1.setAuthor(1);
-        comment1.setText(comment.getText());
-        comment1.setCreatedAt(System.currentTimeMillis());
-        comment1.setAuthorImage("path");
 
-        return ResponseEntity.ok(comment1);
+        Comment saveComment = commentService.addComment(comment, 0 ,id);
+
+        return saveComment != null ? ResponseEntity.ok(saveComment) : ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @commentServiceImpl.isCommentOwner(#commentId)")
     @DeleteMapping("{id}/comments/{commentId}")
     public void deleteComment(@PathVariable int id, @PathVariable int commentId) {
-
+        commentService.delComment(commentId);
     }
 
+    @PreAuthorize("@commentServiceImpl.isCommentOwner(#commentId)")
     @PatchMapping("{id}/comments/{commentId}")
-    public ResponseEntity<Comment> updateComment(@PathVariable int id, @RequestBody CreateOrUpdateComment comment) {
-        Comment comment1 = new Comment();
-        comment1.setPk(id);
-        comment1.setAuthor(1);
-        comment1.setText(comment.getText());
-        comment1.setCreatedAt(System.currentTimeMillis());
-        comment1.setAuthorImage("path");
+    public ResponseEntity<Comment> updateComment(@PathVariable int id,
+                                                 @PathVariable int commentId,
+                                                 @RequestBody CreateOrUpdateComment comment) {
 
-        return ResponseEntity.ok(comment1);
+        Comment saveComment = commentService.addComment(comment, commentId ,id);
+
+        return saveComment != null ? ResponseEntity.ok(saveComment) : ResponseEntity.notFound().build();
     }
 }
