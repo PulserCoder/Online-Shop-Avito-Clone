@@ -1,8 +1,7 @@
 package ru.skypro.homework.service.impl;
 
-import org.springframework.security.core.userdetails.User;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.Register;
 import ru.skypro.homework.mapper.RegisterMapper;
@@ -10,20 +9,18 @@ import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
 
+import java.util.Optional;
+
 
 @Service
 public class AuthServiceImpl implements AuthService {
-
-    private final UserDetailsManager manager;
     private final PasswordEncoder encoder;
     private final UserRepository userRepository;
     private final RegisterMapper registerMapper;
 
-    public AuthServiceImpl(UserDetailsManager manager,
-                           PasswordEncoder passwordEncoder,
+    public AuthServiceImpl(PasswordEncoder passwordEncoder,
                            UserRepository userRepository,
                            RegisterMapper registerMapper) {
-        this.manager = manager;
         this.encoder = passwordEncoder;
         this.userRepository = userRepository;
         this.registerMapper = registerMapper;
@@ -31,29 +28,31 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean login(String userName, String password) {
-        UserEntity userEntity = userRepository.findByEmail(userName);
+        Optional<UserEntity> userEntity = userRepository.findByEmail(userName);
 
-        if (userEntity == null) {
+        if (userEntity.isEmpty()) {
             return false;
         }
 
-        return encoder.matches(password, userEntity.getPassword());
+        return userEntity.filter(entity -> encoder.matches(password, entity.getPassword())).isPresent();
+
     }
 
     @Override
     public boolean register(Register register) {
-        if (manager.userExists(register.getUsername())) {
+        if (register == null) {
             return false;
         }
-        manager.createUser(
-                User.builder()
-                        .passwordEncoder(this.encoder::encode)
-                        .password(register.getPassword())
-                        .username(register.getUsername())
-                        .roles(register.getRole().name())
-                        .build());
 
-        userRepository.save(registerMapper.registerToUserEntity(register));
+        if (userRepository.existsByEmail(register.getUsername())) {
+            return false;
+        }
+
+        UserEntity user = registerMapper.registerToUserEntity(register);
+
+        user.setPassword(encoder.encode(register.getPassword()));
+
+        userRepository.save(user);
 
         return true;
     }
