@@ -3,26 +3,27 @@ package ru.skypro.homework.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import ru.skypro.homework.dto.Role;
+
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ru.skypro.homework.filter.BasicAuthCorsFilter; // Импорт фильтра
+
 import ru.skypro.homework.service.impl.UserDetailsServiceImpl;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity
+public class WebSecurityConfig {
 
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",
@@ -33,69 +34,45 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/register"
     };
 
-//    @Bean
-//    public InMemoryUserDetailsManager userDetailsService() {
-//        return new InMemoryUserDetailsManager();
-//    }
+    private final UserDetailsServiceImpl userDetailsService;
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return new UserDetailsServiceImpl();
-//    }
-
-    /*@Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf()
-                .disable()
-                .authorizeHttpRequests(
-                        authorization ->
-                                authorization
-                                        .mvcMatchers(AUTH_WHITELIST)
-                                        .permitAll()
-                                        .mvcMatchers("/ads/**", "/users/**")
-                                        .authenticated())
-                .cors()
-                .and()
-                .httpBasic(withDefaults());
-        return http.build();
-    }*/
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private BasicAuthCorsFilter basicAuthCorsFilter; // Инжектируем фильтр
+
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(authenticationProvider());
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf().disable()
+                .authorizeRequests(auth -> auth
+                        .mvcMatchers(AUTH_WHITELIST).permitAll()
+                        .mvcMatchers("/ads/**", "/users/**").authenticated())
+                .cors(withDefaults())
+                .httpBasic(withDefaults())
+                .addFilterBefore(basicAuthCorsFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
-    DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
-        authProvider.setPasswordEncoder(passwordEncoder());
-        authProvider.setUserDetailsService(this.userDetailsService);
-
-        return authProvider;
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(authenticationProvider())
+                .build();
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.csrf()
-                .disable()
-                .authorizeHttpRequests(
-                        authorization ->
-                                authorization
-                                        .mvcMatchers(AUTH_WHITELIST)
-                                        .permitAll()
-                                        .mvcMatchers("/ads/**", "/users/**")
-                                        .authenticated())
-                .cors()
-                .and()
-                .httpBasic(withDefaults());
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(this.userDetailsService);
+        return authProvider;
     }
 }
