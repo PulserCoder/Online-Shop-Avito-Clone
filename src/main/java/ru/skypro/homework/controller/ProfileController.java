@@ -3,6 +3,7 @@ package ru.skypro.homework.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +12,6 @@ import ru.skypro.homework.dto.profile.UpdateUser;
 import ru.skypro.homework.dto.profile.User;
 import ru.skypro.homework.service.ProfileService;
 
-import java.io.IOException;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -41,10 +41,10 @@ public class ProfileController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PatchMapping(path = "/me/image", consumes = "multipart/form-data")
-    public ResponseEntity<HttpStatus> updateImage(@RequestBody MultipartFile file) throws IOException {
-            profileService.changeImage(file);
+    @PatchMapping(path = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HttpStatus> updateImage(@RequestParam("file") MultipartFile file) {
+        profileService.changeImage(file);
 
-            return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

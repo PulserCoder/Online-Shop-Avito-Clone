@@ -1,5 +1,6 @@
 package ru.skypro.homework.service.impl;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,11 +12,8 @@ import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ProfileService;
+import ru.skypro.homework.service.S3Service;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
 @Service
@@ -23,14 +21,19 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final UserMapper userMapper;
-    private static final String UPLOAD_DIR = "uploads/";
+    private final S3Service s3Service;
+
+    @Value("${s3.selectel.domain}")
+    private String domain;
 
     public ProfileServiceImpl(UserRepository userRepository,
                               PasswordEncoder encoder,
-                              UserMapper userMapper) {
+                              UserMapper userMapper,
+                              S3Service s3Service) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.userMapper = userMapper;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -84,8 +87,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void changeImage(MultipartFile file) throws IOException {
+    public void changeImage(MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
         Optional<UserEntity> userEntity = userRepository.findByEmail(username);
 
         if (userEntity.isEmpty()) {
@@ -94,24 +98,14 @@ public class ProfileServiceImpl implements ProfileService {
 
         UserEntity user = userEntity.get();
 
-        Path uploadDir = Path.of(UPLOAD_DIR);
+        String fileName = user.getId() + "-Avatar";
+        if (s3Service.uploadFile(file, fileName)) {
+            fileName = domain + "/" + fileName + "." + s3Service.getExtension(file.getOriginalFilename());
 
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir);
+            user.setImage(fileName);
+
+            userRepository.save(user);
         }
-
-
-        String fileName = file.getOriginalFilename();
-
-        if (fileName == null) {
-            return;
-        }
-
-        Path filePath = uploadDir.resolve(fileName);
-
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        user.setImage(fileName);
     }
 
     @Override
