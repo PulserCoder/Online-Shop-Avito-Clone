@@ -37,6 +37,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.2</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -59,8 +60,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
@@ -93,8 +92,6 @@
             <version>0.2.0</version>
             <scope>provided</scope> <!-- Это нужно, чтобы библиотека не попала в окончательный пакет -->
         </dependency>
-
-
     </dependencies>
 
     <build>
@@ -135,8 +132,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
-
         </plugins>
     </build>
 
