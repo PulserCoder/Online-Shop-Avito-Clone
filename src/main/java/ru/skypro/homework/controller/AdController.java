@@ -54,7 +54,6 @@ public class AdController {
         try {
             return ResponseEntity.ok().body(adService.getAdDetailedById(id));
         } catch (RuntimeException e) {
-            System.out.println("какая-то хуйня");
             log.error(e.getMessage());
             return ResponseEntity.badRequest().build();
         }

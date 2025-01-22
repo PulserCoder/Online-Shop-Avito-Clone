@@ -72,7 +72,6 @@ public class AdServiceImpl implements AdService {
             adEntity.setImage(pathToImage);
         }
         else {
-            System.out.println("не вывелось");
             throw new RuntimeException();
         }
         adRepository.save(newAd);
