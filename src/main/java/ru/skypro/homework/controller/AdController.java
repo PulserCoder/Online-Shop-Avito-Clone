@@ -1,16 +1,21 @@
 package ru.skypro.homework.controller;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.ad.*;
 import ru.skypro.homework.service.AdService;
 
+import javax.validation.Valid;
 import java.util.List;
 
+@CrossOrigin(value = "http://localhost:3000")
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -18,8 +23,10 @@ import java.util.List;
 public class AdController {
 
     private final AdService adService;
+    private final ObjectMapper objectMapper;
 
-    @GetMapping("/")
+
+    @GetMapping("")
     public ResponseEntity<Ads> getAllAds() {
         try {
             return ResponseEntity.ok(adService.findAllWithCount());
@@ -29,26 +36,33 @@ public class AdController {
         }
     }
 
-    @PostMapping(path="/", consumes = "multipart/form-data")
-    public ResponseEntity<Ad> createAd(@RequestPart CreateOrUpdateAd ad,
-                                       @RequestPart MultipartFile image) {
-        // TODO:: save file in s3, create new ad by auth
-        return null;
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<AdDetailed> getAdById(@PathVariable("id") int id) {
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Ad> createAd(@RequestPart(value = "properties") String adJson,
+                                       @RequestPart(value = "image") MultipartFile image) {
         try {
-            return ResponseEntity.ok(adService.getAdDetailedById(id));
-        } catch (RuntimeException e) {
+            CreateOrUpdateAd ad = objectMapper.readValue(adJson, CreateOrUpdateAd.class);
+            Ad adObj = adService.createAd(ad, image);
+            return ResponseEntity.ok(adObj);
+        } catch (Exception e) {
             log.error(e.getMessage());
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ExtendedAd> getAdById(@PathVariable("id") int id) {
+        try {
+            return ResponseEntity.ok().body(adService.getAdDetailedById(id));
+        } catch (RuntimeException e) {
+            System.out.println("какая-то хуйня");
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or adServiceImpl.isAdOwner(#id)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Ad> deleteAd(@PathVariable("id") int id) {
-        // TODO:: Add checking by auth that this ad is user's
         try {
             return ResponseEntity.ok(adService.deleteAdById(id));
         } catch (RuntimeException e) {
@@ -67,12 +81,11 @@ public class AdController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<Ad>> getAllAdsMe() {
-        // TODO:: do a realization of auth check and get all ads in service
-        return null;
+    public ResponseEntity<Ads> getAllAdsMe() {
+        return ResponseEntity.ok(adService.getUserAds());
     }
 
-    @PatchMapping(path="/{id}/image", consumes = "multipart/form-data")
+    @PatchMapping(path = "/{id}/image", consumes = "multipart/form-data")
     public ResponseEntity<String> updateAdImage(@PathVariable("id") int id, @RequestPart("image") MultipartFile image) {
         // TODO:: save file in s3, create new ad by auth also do a service method
         return null;
