@@ -1,19 +1,23 @@
 package ru.skypro.homework.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.ad.Ad;
-import ru.skypro.homework.dto.ad.AdDetailed;
+import ru.skypro.homework.dto.ad.ExtendedAd;
 import ru.skypro.homework.dto.ad.Ads;
 import ru.skypro.homework.dto.ad.CreateOrUpdateAd;
 import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.mapper.AdMapperSimple;
 import ru.skypro.homework.models.AdEntity;
+import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.S3Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +27,10 @@ public class AdServiceImpl implements AdService {
     private final AdRepository adRepository;
     private final AdMapper adMapper;
     private final AdMapperSimple adMapperSimple;
-
+    private final UserRepository userRepository;
+    private final S3Service s3Service;
+    @Value("${s3.selectel.domain}")
+    private String domain;
     @Override
     public Optional<AdEntity> findById(int id) {
         return adRepository.findById(id);
@@ -45,12 +52,37 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
-    public Ad createAd(CreateOrUpdateAd ad, MultipartFile file) {
-        return null;
+    public boolean isAdOwner(int id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity author = userRepository.findByEmail(email).orElseThrow(IllegalArgumentException::new);
+        return author.getAds().stream().anyMatch(ad -> ad.getId() == id);
+
     }
 
     @Override
-    public AdDetailed getAdDetailedById(int id) {
+    public Ad createAd(CreateOrUpdateAd ad, MultipartFile file) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity author = userRepository.findByEmail(email).orElseThrow(IllegalArgumentException::new);
+        AdEntity adEntity = adMapperSimple.toAdEntity(ad);
+        adEntity.setAuthor(author);
+        AdEntity newAd = adRepository.save(adEntity);
+        String extention = s3Service.getExtension(file.getOriginalFilename());
+        String pathToImage = domain + "/ad_" + newAd.getId() + "." + extention;
+        if (s3Service.uploadFile(file, "ad_" + newAd.getId())) {
+            adEntity.setImage(pathToImage);
+        }
+        else {
+            System.out.println("не вывелось");
+            throw new RuntimeException();
+        }
+        adRepository.save(newAd);
+        return adMapperSimple.toAdDTO(adEntity);
+
+
+    }
+
+    @Override
+    public ExtendedAd getAdDetailedById(int id) {
         AdEntity ad = adRepository.findById(id).orElseThrow(RuntimeException::new);
         return adMapper.toAdDetailed(ad);
 
@@ -74,9 +106,16 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
-    public List<Ad> getUserAds() {
-        // TODO: HERE SHOULD BE ADS OF AUTH USER
-        return List.of();
+    public Ads getUserAds() {
+        String author_name = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity author = userRepository.findByEmail(author_name).orElseThrow(IllegalArgumentException::new);
+        List<Ad> listAds = adMapperSimple.toAdListDTO(adRepository.findAllByAuthor(author));
+        Ads ads = new Ads();
+        ads.setCount(listAds.size());
+        ads.setResults(listAds);
+        return ads;
+
+
     }
 
     @Override
