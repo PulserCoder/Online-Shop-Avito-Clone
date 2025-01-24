@@ -41,7 +41,7 @@ public interface CommentMapper {
 
     @Mappings({
             @Mapping(target = "count", expression = "java((long) ad.getComments().size())"),
-            @Mapping(target = "comments", expression = "java(ad.getComments().stream().map(this::toComment).collect(Collectors.toList()))")
+            @Mapping(target = "results", expression = "java(ad.getComments().stream().map(this::toComment).collect(Collectors.toList()))")
     })
     Comments toCommentsDto(AdEntity ad);
 
