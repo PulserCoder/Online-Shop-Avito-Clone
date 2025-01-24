@@ -2,7 +2,7 @@ package ru.skypro.homework.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.skypro.homework.dto.ad.AdDetailed;
+import ru.skypro.homework.dto.ad.ExtendedAd;
 import ru.skypro.homework.models.AdEntity;
 
 @Mapper(componentModel = "spring")
@@ -13,6 +13,6 @@ public interface AdMapper {
     @Mapping(source = "author.lastName", target = "authorLastName")
     @Mapping(source = "author.email", target = "email")
     @Mapping(source = "author.phone", target = "phone")
-    AdDetailed toAdDetailed(AdEntity ad);
+    ExtendedAd toAdDetailed(AdEntity ad);
 
 }

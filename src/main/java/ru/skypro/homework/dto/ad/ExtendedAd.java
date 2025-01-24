@@ -4,7 +4,7 @@ package ru.skypro.homework.dto.ad;
 import lombok.Data;
 
 @Data
-public class AdDetailed {
+public class ExtendedAd {
     private int pk;
     private String authorFirstName;
     private String authorLastName;
