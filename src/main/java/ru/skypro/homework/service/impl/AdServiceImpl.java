@@ -16,8 +16,10 @@ import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.FileUploader;
 import ru.skypro.homework.service.S3Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,8 +31,8 @@ public class AdServiceImpl implements AdService {
     private final AdMapperSimple adMapperSimple;
     private final UserRepository userRepository;
     private final S3Service s3Service;
-    @Value("${s3.selectel.domain}")
-    private String domain;
+    private final FileUploader fileUploader;
+
     @Override
     public Optional<AdEntity> findById(int id) {
         return adRepository.findById(id);
@@ -60,15 +62,15 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
-    public Ad createAd(CreateOrUpdateAd ad, MultipartFile file) {
+    public Ad createAd(CreateOrUpdateAd ad, MultipartFile file) throws IOException {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity author = userRepository.findByEmail(email).orElseThrow(IllegalArgumentException::new);
         AdEntity adEntity = adMapperSimple.toAdEntity(ad);
         adEntity.setAuthor(author);
         AdEntity newAd = adRepository.save(adEntity);
         String extention = s3Service.getExtension(file.getOriginalFilename());
-        String pathToImage = domain + "/ad_" + newAd.getId() + "." + extention;
-        if (s3Service.uploadFile(file, "ad_" + newAd.getId())) {
+        String pathToImage = "/file/ad_" + newAd.getId() + "." + extention;
+        if (fileUploader.saveFile(file, "ad_" + newAd.getId())) {
             adEntity.setImage(pathToImage);
         }
         else {
