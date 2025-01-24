@@ -1,7 +1,7 @@
 package ru.skypro.homework.service.impl;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,8 +12,9 @@ import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.models.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ProfileService;
-import ru.skypro.homework.service.S3Service;
 
+import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -21,37 +22,34 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final UserMapper userMapper;
-    private final S3Service s3Service;
-
-    @Value("${s3.selectel.domain}")
-    private String domain;
+    private final FileUploaderImpl fileUploader;
 
     public ProfileServiceImpl(UserRepository userRepository,
                               PasswordEncoder encoder,
                               UserMapper userMapper,
-                              S3Service s3Service) {
+                              FileUploaderImpl fileUploader) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.userMapper = userMapper;
-        this.s3Service = s3Service;
+        this.fileUploader = fileUploader;
     }
 
     @Override
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<UserEntity> userEntity =  userRepository.findByEmail(username);
+        Optional<UserEntity> userEntity = userRepository.findByEmail(username);
 
-        return userEntity.map(userMapper::userEntityToUser).orElse(null);
-
+        return userEntity
+                .map(userMapper::userEntityToUser)
+                .orElseThrow(() -> new UsernameNotFoundException("User with email " + username + " not found"));
     }
-
     @Override
     public void updateUser(UpdateUser updateUser) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Optional<UserEntity> userEntity = userRepository.findByEmail(username);
 
         if (userEntity.isEmpty()) {
-            return;
+            throw new RuntimeException("User with email " + username + " not found");
         }
 
         UserEntity user = userEntity.get();
@@ -93,19 +91,25 @@ public class ProfileServiceImpl implements ProfileService {
         Optional<UserEntity> userEntity = userRepository.findByEmail(username);
 
         if (userEntity.isEmpty()) {
-            return;
+            throw new RuntimeException("User with email " + username + " not found");
         }
 
         UserEntity user = userEntity.get();
 
         String fileName = user.getId() + "-Avatar";
-        if (s3Service.uploadFile(file, fileName)) {
-            fileName = domain + "/" + fileName + "." + s3Service.getExtension(file.getOriginalFilename());
+        try {
+            if (fileUploader.saveFile(file, fileName)) {
+                fileName = "/file/" + fileName + "." + fileUploader.getExtension(Objects.requireNonNull(file.getOriginalFilename()));
 
-            user.setImage(fileName);
+                user.setImage(fileName);
 
-            userRepository.save(user);
+                userRepository.save(user);
+            }
         }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
