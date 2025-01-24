@@ -9,5 +9,5 @@ public class Comments {
 
     private long count;
 
-    private List<Comment> comments;
+    private List<Comment> results;
 }
