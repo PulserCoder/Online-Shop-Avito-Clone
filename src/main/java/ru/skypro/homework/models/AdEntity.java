@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 public class AdEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String title;
     private String description;
