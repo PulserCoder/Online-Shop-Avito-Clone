@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.ad.*;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.impl.AdServiceImpl;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin(value = "http://localhost:3000")
@@ -23,6 +25,7 @@ import java.util.List;
 public class AdController {
 
     private final AdService adService;
+    private final AdServiceImpl adServiceImpl;
     private final ObjectMapper objectMapper;
 
 
@@ -59,7 +62,7 @@ public class AdController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or adServiceImpl.isAdOwner(#id)")
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdOwner(#id)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Ad> deleteAd(@PathVariable("id") int id) {
         try {
@@ -69,9 +72,9 @@ public class AdController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdOwner(#id)")
     @PatchMapping("/{id}")
     public ResponseEntity<Ad> updateAd(@PathVariable("id") int id, @RequestBody CreateOrUpdateAd ad) {
-        // TODO:: Add checking by auth that this ad is user's
         try {
             return ResponseEntity.ok(adService.updateAdById(ad, id));
         } catch (RuntimeException e) {
@@ -84,10 +87,10 @@ public class AdController {
         return ResponseEntity.ok(adService.getUserAds());
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdOwner(#id)")
     @PatchMapping(path = "/{id}/image", consumes = "multipart/form-data")
-    public ResponseEntity<String> updateAdImage(@PathVariable("id") int id, @RequestPart("image") MultipartFile image) {
-        // TODO:: save file in s3, create new ad by auth also do a service method
-        return null;
+    public ResponseEntity<List<String>> updateAdImage(@PathVariable("id") int id, @RequestPart("image") MultipartFile image) throws IOException {
+        return ResponseEntity.ok(adService.updateAdPhotoById(id, image));
     }
 
 

@@ -26,7 +26,7 @@ public interface AdService {
 
     Ads getUserAds();
 
-    String updateAdPhotoById(int id, MultipartFile file);
+    List<String> updateAdPhotoById(int id, MultipartFile file) throws IOException;
 
     Ads findAllWithCount();
 

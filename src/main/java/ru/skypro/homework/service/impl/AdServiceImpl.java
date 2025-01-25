@@ -17,9 +17,9 @@ import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
 import ru.skypro.homework.service.FileUploader;
-import ru.skypro.homework.service.S3Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +30,6 @@ public class AdServiceImpl implements AdService {
     private final AdMapper adMapper;
     private final AdMapperSimple adMapperSimple;
     private final UserRepository userRepository;
-    private final S3Service s3Service;
     private final FileUploader fileUploader;
 
     @Override
@@ -68,7 +67,7 @@ public class AdServiceImpl implements AdService {
         AdEntity adEntity = adMapperSimple.toAdEntity(ad);
         adEntity.setAuthor(author);
         AdEntity newAd = adRepository.save(adEntity);
-        String extention = s3Service.getExtension(file.getOriginalFilename());
+        String extention = fileUploader.getExtension(file.getOriginalFilename());
         String pathToImage = "/file/ad_" + newAd.getId() + "." + extention;
         if (fileUploader.saveFile(file, "ad_" + newAd.getId())) {
             adEntity.setImage(pathToImage);
@@ -120,11 +119,18 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
-    public String updateAdPhotoById(int id, MultipartFile file) {
-        // TODO: PUT PHOTO TO S3
+    public List<String> updateAdPhotoById(int id, MultipartFile file) throws IOException {
+        String extention = fileUploader.getExtension(file.getOriginalFilename());
         AdEntity adEntity = adRepository.findById(id).orElseThrow(RuntimeException::new);
-        adEntity.setImage(file.getName());
-        return file.getName();
+        String pathToImage = "/file/ad_" + adEntity.getId() + "." + extention;
+        if (fileUploader.saveFile(file, "ad_" + adEntity.getId())) {
+            adEntity.setImage(pathToImage);
+        }
+        else {
+            throw new RuntimeException();
+        }
+        adRepository.save(adEntity);
+        return new ArrayList<>(List.of(adEntity.getImage()));
     }
 
 }
